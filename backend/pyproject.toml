@@ -8,7 +8,7 @@ dependencies = [
   "uvicorn[standard]>=0.30",
   "pydantic>=2.8",
   "pydantic-settings>=2.4",
-  "sqlglot>=25.0",
+  "sqlglot>=30.0",
   "openai>=1.50",
 ]
 
@@ -40,7 +40,7 @@ target-version = "py311"
 select = ["E", "F", "I", "B", "UP", "SIM", "N", "S"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = ["S101", "S608"]
 
 [tool.mypy]
 python_version = "3.11"

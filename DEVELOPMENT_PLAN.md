@@ -74,16 +74,16 @@
 
 ### Day 2 — SQL Validator (core of the project) + tests
 **Outcome:** the safety layer, fully tested before any LLM is involved.
-- [ ] `sql_validator.py` (pure function) using sqlglot AST:
+- [x] `sql_validator.py` (pure function) using sqlglot AST:
   - exactly one statement, root node must be `SELECT` (allow CTEs/UNION of selects)
   - walk AST: reject any DML/DDL/`PRAGMA`/`ATTACH`/`EXPLAIN`-write nodes
   - table & column **allow-list** from introspected schema; reject `sqlite_*` tables
   - function allow-list (aggregates, date, string, math); reject unknown/dangerous functions
   - strip/reject comments; max length; inject or cap `LIMIT` to `MAX_ROWS`
   - return `ValidationResult(ok, sql_normalized, reason, warnings)`
-- [ ] Schema introspection service (cached) → `SchemaInfo` model
-- [ ] **Adversarial test suite** (parametrized): stacked queries (`; DROP`), comment tricks, `UNION` exfiltration of system tables, CTE-wrapped DML, case/whitespace/unicode obfuscation, `PRAGMA`, `ATTACH`, huge queries, empty input
-- [ ] Target: 100% branch coverage on validator
+- [x] Schema introspection service (cached) → `SchemaInfo` model
+- [x] **Adversarial test suite** (parametrized): stacked queries (`; DROP`), comment tricks, `UNION` exfiltration of system tables, CTE-wrapped DML, case/whitespace/unicode obfuscation, `PRAGMA`, `ATTACH`, huge queries, empty input
+- [x] Target: 100% branch coverage on validator
 
 **Done when:** all malicious samples rejected, all legit samples pass.
 
