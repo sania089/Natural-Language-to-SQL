@@ -62,13 +62,13 @@
 
 ### Day 1 — Foundations & Data
 **Outcome:** repo scaffolded, tooling green, sample DB ready.
-- [ ] Monorepo layout (`backend/`, `frontend/`, `data/`, `docs/`), `.gitignore`, `.editorconfig`, `.env.example`
-- [ ] Backend scaffold: FastAPI app factory, `pydantic-settings` config, structured logging, `/api/health`
-- [ ] Frontend scaffold: Vite + React + TS strict + Tailwind + shadcn/ui + TanStack Query
-- [ ] Tooling: ruff, mypy, pytest, ESLint, Prettier, Vitest, pre-commit
-- [ ] CI workflow (lint + typecheck + test + build)
-- [ ] Seed script: e-commerce DB (`customers`, `products`, `categories`, `orders`, `order_items`) with ~1–5k realistic rows, deterministic (seeded RNG), with indexes
-- [ ] Read-only connection helper (`file:...?mode=ro`, `uri=True`)
+- [x] Monorepo layout (`backend/`, `frontend/`, `data/`, `docs/`), `.gitignore`, `.editorconfig`, `.env.example`
+- [x] Backend scaffold: FastAPI app factory, `pydantic-settings` config, structured logging, `/api/health`
+- [x] Frontend scaffold: Vite + React + TS strict + Tailwind + shadcn/ui + TanStack Query
+- [x] Tooling: ruff, mypy, pytest, ESLint, Prettier, Vitest, pre-commit
+- [x] CI workflow (lint + typecheck + test + build)
+- [x] Seed script: e-commerce DB (`customers`, `products`, `categories`, `orders`, `order_items`) with ~1–5k realistic rows, deterministic (seeded RNG), with indexes
+- [x] Read-only connection helper (`file:...?mode=ro`, `uri=True`)
 
 **Done when:** `pytest`, `npm test`, CI all pass on an empty-but-wired project; `python -m app.db.seed` creates the DB.
 
