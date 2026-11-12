@@ -13,7 +13,7 @@ repos:
       - id: mypy
         files: ^backend/app/
         args: [--config-file=backend/pyproject.toml]
-        additional_dependencies: [sqlglot>=30.0, fastapi>=0.115, pydantic>=2.8, pydantic-settings>=2.4, openai>=1.50]
+        additional_dependencies: [sqlglot>=30.0, fastapi>=0.115, pydantic>=2.8, pydantic-settings>=2.4, httpx>=0.27]
   - repo: local
     hooks:
       - id: prettier

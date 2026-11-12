@@ -4,6 +4,8 @@ import json
 import logging
 from typing import Any
 
+from app.request_context import request_id_var
+
 _RESERVED = set(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
 
 
@@ -14,6 +16,7 @@ class JsonFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
+            "request_id": request_id_var.get(),
         }
         payload.update({k: v for k, v in record.__dict__.items() if k not in _RESERVED})
         if record.exc_info:

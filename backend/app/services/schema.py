@@ -74,6 +74,34 @@ def _introspect_table(conn: sqlite3.Connection, name: str) -> TableInfo:
     return TableInfo(name=name, columns=columns, foreign_keys=fks)
 
 
+def _quote(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+def collect_samples(
+    conn: sqlite3.Connection,
+    schema: SchemaInfo,
+    *,
+    max_distinct: int = 10,
+    per_column: int = 3,
+) -> dict[tuple[str, str], tuple[str, ...]]:
+    """Sample values for low-cardinality TEXT columns, to help the LLM match real values."""
+    samples: dict[tuple[str, str], tuple[str, ...]] = {}
+    for table in schema.tables:
+        for col in table.columns:
+            if col.type.upper() != "TEXT" or col.primary_key:
+                continue
+            t, c = _quote(table.name), _quote(col.name)
+            query = (
+                f"SELECT DISTINCT {c} FROM {t} WHERE {c} IS NOT NULL "  # noqa: S608
+                f"ORDER BY {c} LIMIT {max_distinct + 1}"
+            )
+            rows = conn.execute(query).fetchall()
+            if 0 < len(rows) <= max_distinct:
+                samples[(table.name, col.name)] = tuple(str(r[0]) for r in rows[:per_column])
+    return samples
+
+
 @lru_cache(maxsize=8)
 def get_schema(db_path: Path) -> SchemaInfo:
     """Introspect once per database file and cache for the process lifetime."""

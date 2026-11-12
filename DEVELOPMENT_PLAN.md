@@ -90,13 +90,13 @@
 
 ### Day 3 — LLM Pipeline & Executor
 **Outcome:** `POST /api/ask` works end-to-end via curl.
-- [ ] `LlmClient` protocol + `GeminiClient` + `GroqClient` implementations (both via OpenAI-compatible endpoints; free-tier rate-limit aware) (timeout, retries with backoff, typed errors); tests use a `FakeLlmClient`
-- [ ] `prompt_builder.py`: system prompt = role + rules + compact schema (DDL-style with column types, FK hints, 2–3 sample values per low-cardinality column) + few-shot examples; user question isolated in a delimited block
-- [ ] Output parsing: extract SQL from fenced block / strict JSON; handle "cannot answer" response → friendly 422
-- [ ] `executor.py`: read-only conn, `progress_handler` timeout, row cap, returns columns/rows/timing
-- [ ] `pipeline.py`: build prompt → LLM → validate → (on reject/exec error: **one** repair retry with the error fed back) → execute
-- [ ] Central exception → HTTP mapping; request IDs; `GET /api/schema`
-- [ ] Integration tests with `FakeLlmClient` (happy path, rejected path, repair path, timeout path)
+- [x] `LlmClient` protocol + `GeminiClient` + `GroqClient` implementations (both via OpenAI-compatible endpoints; free-tier rate-limit aware) (timeout, retries with backoff, typed errors); tests use a `FakeLlmClient`
+- [x] `prompt_builder.py`: system prompt = role + rules + compact schema (DDL-style with column types, FK hints, 2–3 sample values per low-cardinality column) + few-shot examples; user question isolated in a delimited block
+- [x] Output parsing: extract SQL from fenced block / strict JSON; handle "cannot answer" response → friendly 422
+- [x] `executor.py`: read-only conn, `progress_handler` timeout, row cap, returns columns/rows/timing
+- [x] `pipeline.py`: build prompt → LLM → validate → (on reject/exec error: **one** repair retry with the error fed back) → execute
+- [x] Central exception → HTTP mapping; request IDs; `GET /api/schema`
+- [x] Integration tests with `FakeLlmClient` (happy path, rejected path, repair path, timeout path)
 
 **Done when:** curl "top 5 customers by spend" returns valid rows; "delete all customers" returns a clean rejection.
 
