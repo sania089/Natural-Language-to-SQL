@@ -62,28 +62,29 @@
 
 ### Day 1 — Foundations & Data
 **Outcome:** repo scaffolded, tooling green, sample DB ready.
-- [ ] Monorepo layout (`backend/`, `frontend/`, `data/`, `docs/`), `.gitignore`, `.editorconfig`, `.env.example`
-- [ ] Backend scaffold: FastAPI app factory, `pydantic-settings` config, structured logging, `/api/health`
-- [ ] Frontend scaffold: Vite + React + TS strict + Tailwind + shadcn/ui + TanStack Query
-- [ ] Tooling: ruff, mypy, pytest, ESLint, Prettier, Vitest, pre-commit
-- [ ] CI workflow (lint + typecheck + test + build)
-- [ ] Seed script: e-commerce DB (`customers`, `products`, `categories`, `orders`, `order_items`) with ~1–5k realistic rows, deterministic (seeded RNG), with indexes
-- [ ] Read-only connection helper (`file:...?mode=ro`, `uri=True`)
+- [x] Monorepo layout (`backend/`, `frontend/`, `data/`, `docs/`), `.gitignore`, `.editorconfig`, `.env.example`
+- [x] Backend scaffold: FastAPI app factory, `pydantic-settings` config, structured logging, `/api/health`
+- [x] Frontend scaffold: Vite + React + TS strict + Tailwind + shadcn/ui + TanStack Query
+- [x] Tooling: ruff, mypy, pytest, ESLint, Prettier, Vitest, pre-commit
+- [x] CI workflow (lint + typecheck + test + build)
+- [x] Seed script: e-commerce DB (`customers`, `products`, `categories`, `orders`, `order_items`) with ~1–5k realistic rows, deterministic (seeded RNG), with indexes
+- [x] Read-only connection helper (`file:...?mode=ro`, `uri=True`)
 
 **Done when:** `pytest`, `npm test`, CI all pass on an empty-but-wired project; `python -m app.db.seed` creates the DB.
 
 ### Day 2 — SQL Validator (core of the project) + tests
 **Outcome:** the safety layer, fully tested before any LLM is involved.
-- [ ] `sql_validator.py` (pure function) using sqlglot AST:
+- [x] `sql_validator.py` (pure function) using sqlglot AST:
   - exactly one statement, root node must be `SELECT` (allow CTEs/UNION of selects)
   - walk AST: reject any DML/DDL/`PRAGMA`/`ATTACH`/`EXPLAIN`-write nodes
   - table & column **allow-list** from introspected schema; reject `sqlite_*` tables
+  - reject `WITH RECURSIVE`, table-valued functions (`pragma_*()`, `json_each()`), and schema-qualified tables (`main.x`, `temp.x`)
   - function allow-list (aggregates, date, string, math); reject unknown/dangerous functions
   - strip/reject comments; max length; inject or cap `LIMIT` to `MAX_ROWS`
   - return `ValidationResult(ok, sql_normalized, reason, warnings)`
-- [ ] Schema introspection service (cached) → `SchemaInfo` model
-- [ ] **Adversarial test suite** (parametrized): stacked queries (`; DROP`), comment tricks, `UNION` exfiltration of system tables, CTE-wrapped DML, case/whitespace/unicode obfuscation, `PRAGMA`, `ATTACH`, huge queries, empty input
-- [ ] Target: 100% branch coverage on validator
+- [x] Schema introspection service (cached) → `SchemaInfo` model
+- [x] **Adversarial test suite** (parametrized): stacked queries (`; DROP`), comment tricks, `UNION` exfiltration of system tables, CTE-wrapped DML, case/whitespace/unicode obfuscation, `PRAGMA`, `ATTACH`, huge queries, empty input
+- [x] Target: 100% branch coverage on validator
 
 **Done when:** all malicious samples rejected, all legit samples pass.
 
@@ -176,6 +177,6 @@ If a day slips, cut in this order: session history → schema dialog polish → 
 |------|-----------|
 | LLM produces wrong-but-valid SQL | Show SQL transparently; golden-set evals; schema hints + few-shot examples |
 | Validator bypass | AST parsing, allow-lists, adversarial tests, **read-only DB connection** as backstop |
-| Slow/expensive queries | Timeout via progress handler, row cap, indexes on seed data |
+| Slow/expensive queries | Timeout via progress handler, row cap, indexes on seed data, recursive CTEs rejected by the validator |
 | LLM latency | Skeletons, optimistic UI, request timeout + retry, optional caching |
 | Scope creep | Deferred list above; fixed 7-day timebox |
