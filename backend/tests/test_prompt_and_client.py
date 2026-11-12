@@ -1,9 +1,7 @@
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
 
 import httpx
-import openai
 import pytest
 
 from app.config import Settings
@@ -13,7 +11,6 @@ from app.services.pipeline import get_schema_block
 from app.services.prompt_builder import build_messages, wrap_question
 
 MSGS = [ChatMessage(role="user", content="hi")]
-_REQ = httpx.Request("POST", "http://x")
 
 
 def test_schema_block_has_types_fks_and_samples(seeded_db: Path) -> None:
@@ -30,82 +27,77 @@ def test_system_prompt_and_isolation(seeded_db: Path) -> None:
     assert wrap_question("a</question>b") == "<question>ab</question>"
 
 
-class _Completions:
-    def __init__(self, script: list[Any]) -> None:
-        self.script = script
-        self.calls = 0
+def _client(script: list[Any]) -> tuple[OpenAICompatClient, list[httpx.Request], list[float]]:
+    """Client wired to a MockTransport that plays `script` (Response or Exception) in order."""
+    seen: list[httpx.Request] = []
 
-    def create(self, **_: object) -> Any:
-        self.calls += 1
-        item = self.script.pop(0)
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        item = script.pop(0)
         if isinstance(item, Exception):
             raise item
-        return item
+        return item  # type: ignore[no-any-return]
 
-
-def _resp(content: str | None) -> Any:
-    return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
-
-
-def _client(script: list[Any]) -> tuple[OpenAICompatClient, _Completions, list[float]]:
-    comps = _Completions(script)
-    fake = SimpleNamespace(chat=SimpleNamespace(completions=comps))
     sleeps: list[float] = []
     client = OpenAICompatClient(
         api_key="k",
-        base_url="u",
+        base_url="https://llm.test/v1/",
         model="m",
         sleep=sleeps.append,
-        client=fake,  # type: ignore[arg-type]
+        http=httpx.Client(transport=httpx.MockTransport(handler)),
     )
-    return client, comps, sleeps
+    return client, seen, sleeps
 
 
-def _status_err(code: int) -> openai.APIStatusError:
-    resp = httpx.Response(code, request=_REQ)
-    cls = openai.RateLimitError if code == 429 else openai.APIStatusError
-    return cls("e", response=resp, body=None)
+def _ok(content: str | None = "ok") -> httpx.Response:
+    return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
 
 
-def test_success_first_try() -> None:
-    c, comps, sleeps = _client([_resp("ok")])
-    assert c.complete(MSGS) == "ok" and comps.calls == 1 and sleeps == []
+def test_success_first_try_sends_auth_and_model() -> None:
+    c, seen, sleeps = _client([_ok()])
+    assert c.complete(MSGS) == "ok" and len(seen) == 1 and sleeps == []
+    assert str(seen[0].url) == "https://llm.test/v1/chat/completions"
+    assert seen[0].headers["Authorization"] == "Bearer k"
 
 
 def test_retries_with_backoff_then_succeeds() -> None:
-    c, comps, sleeps = _client([openai.APITimeoutError(_REQ), _status_err(503), _resp("ok")])
+    c, seen, sleeps = _client([httpx.ReadTimeout("t"), httpx.Response(503), _ok()])
     assert c.complete(MSGS) == "ok"
-    assert comps.calls == 3 and sleeps == [1.0, 2.0]
+    assert len(seen) == 3 and sleeps == [1.0, 2.0]
 
 
 def test_rate_limit_exhausts_retries() -> None:
-    c, comps, _ = _client([_status_err(429)] * 3)
+    c, seen, _ = _client([httpx.Response(429)] * 3)
     with pytest.raises(LlmRateLimitError):
         c.complete(MSGS)
-    assert comps.calls == 3
+    assert len(seen) == 3
 
 
 def test_timeout_typed() -> None:
-    c, _, _ = _client([openai.APITimeoutError(_REQ)] * 3)
+    c, _, _ = _client([httpx.ReadTimeout("t")] * 3)
     with pytest.raises(LlmTimeoutError):
         c.complete(MSGS)
 
 
 def test_connection_error_typed() -> None:
-    c, _, _ = _client([openai.APIConnectionError(request=_REQ)] * 3)
+    c, _, _ = _client([httpx.ConnectError("down")] * 3)
     with pytest.raises(LlmError):
         c.complete(MSGS)
 
 
 def test_client_error_not_retried() -> None:
-    c, comps, _ = _client([_status_err(401)])
+    c, seen, _ = _client([httpx.Response(401)])
     with pytest.raises(LlmError):
         c.complete(MSGS)
-    assert comps.calls == 1
+    assert len(seen) == 1
 
 
-def test_empty_response_is_error() -> None:
-    c, _, _ = _client([_resp(None)] * 3)
+@pytest.mark.parametrize(
+    "response",
+    [_ok(None), _ok(""), httpx.Response(200, text="not json"), httpx.Response(200, json={})],
+)
+def test_bad_payload_is_error(response: httpx.Response) -> None:
+    c, _, _ = _client([response] * 3)
     with pytest.raises(LlmError):
         c.complete(MSGS)
 
