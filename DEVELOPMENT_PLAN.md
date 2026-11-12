@@ -78,6 +78,7 @@
   - exactly one statement, root node must be `SELECT` (allow CTEs/UNION of selects)
   - walk AST: reject any DML/DDL/`PRAGMA`/`ATTACH`/`EXPLAIN`-write nodes
   - table & column **allow-list** from introspected schema; reject `sqlite_*` tables
+  - reject `WITH RECURSIVE`, table-valued functions (`pragma_*()`, `json_each()`), and schema-qualified tables (`main.x`, `temp.x`)
   - function allow-list (aggregates, date, string, math); reject unknown/dangerous functions
   - strip/reject comments; max length; inject or cap `LIMIT` to `MAX_ROWS`
   - return `ValidationResult(ok, sql_normalized, reason, warnings)`
@@ -176,6 +177,6 @@ If a day slips, cut in this order: session history → schema dialog polish → 
 |------|-----------|
 | LLM produces wrong-but-valid SQL | Show SQL transparently; golden-set evals; schema hints + few-shot examples |
 | Validator bypass | AST parsing, allow-lists, adversarial tests, **read-only DB connection** as backstop |
-| Slow/expensive queries | Timeout via progress handler, row cap, indexes on seed data |
+| Slow/expensive queries | Timeout via progress handler, row cap, indexes on seed data, recursive CTEs rejected by the validator |
 | LLM latency | Skeletons, optimistic UI, request timeout + retry, optional caching |
 | Scope creep | Deferred list above; fixed 7-day timebox |
