@@ -15,10 +15,56 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-surface-2: var(--surface-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-success-soft: var(--success-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger-soft: var(--danger-soft);
 
+  /* Type scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* Radii, shadows, motion */
+  --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.18);
   --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  --animate-fade-in: fade-in var(--duration-base) ease-out;
+  --animate-slide-up: slide-up var(--duration-slow) ease-out;
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
 }
 
 :root {
@@ -32,6 +78,11 @@
   --success: #15803d;
   --warning: #b45309;
   --danger: #b91c1c;
+  --surface-2: #f4f4f5;
+  --accent-soft: #eef2ff;
+  --success-soft: #f0fdf4;
+  --warning-soft: #fffbeb;
+  --danger-soft: #fef2f2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,6 +97,11 @@
     --success: #4ade80;
     --warning: #fbbf24;
     --danger: #f87171;
+    --surface-2: #202024;
+    --accent-soft: #1e1b4b;
+    --success-soft: #052e16;
+    --warning-soft: #422006;
+    --danger-soft: #450a0a;
   }
 }
 
@@ -60,9 +116,15 @@
   --success: #4ade80;
   --warning: #fbbf24;
   --danger: #f87171;
+  --surface-2: #202024;
+  --accent-soft: #1e1b4b;
+  --success-soft: #052e16;
+  --warning-soft: #422006;
+  --danger-soft: #450a0a;
 }
 
 body {
+  min-height: 100vh;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
@@ -79,5 +141,22 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shiki dual-theme: tokens carry --shiki-light / --shiki-dark; pick by active theme. */
+.shiki-wrap .shiki,
+.shiki-wrap .shiki span {
+  background: transparent !important;
+  color: var(--shiki-light);
+}
+
+:root[data-theme='dark'] .shiki-wrap .shiki span {
+  color: var(--shiki-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .shiki-wrap .shiki span {
+    color: var(--shiki-dark);
   }
 }
