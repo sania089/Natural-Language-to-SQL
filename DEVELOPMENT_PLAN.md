@@ -102,12 +102,12 @@
 
 ### Day 4 — Frontend Foundation: Design System & Components
 **Outcome:** reusable UI kit + app shell, styled and themed.
-- [ ] Design tokens (CSS variables + Tailwind theme): palette (neutral + one accent, semantic success/warn/danger), type scale, radii, shadows, motion durations
-- [ ] Dark/light theme with `useTheme` (system default, persisted)
-- [ ] Build the primitives: `Button`, `Card`, `Badge`, `Alert`, `Skeleton`, `Tooltip`, `Toast`, `Dialog`, `EmptyState`
-- [ ] `CodeBlock` (Shiki/Prism highlight, copy button via `useCopyToClipboard`), `DataTable` (sticky header, sortable, numeric right-align, zebra, horizontal scroll, virtualization for >200 rows)
-- [ ] App shell: header (logo, schema button, theme toggle), centered content column, footer
-- [ ] Component stories/demo page (or Storybook-lite route) to eyeball all states in both themes
+- [x] Design tokens (CSS variables + Tailwind theme): palette (neutral + one accent, semantic success/warn/danger), type scale, radii, shadows, motion durations
+- [x] Dark/light theme with `useTheme` (system default, persisted)
+- [x] Build the primitives: `Button`, `Card`, `Badge`, `Alert`, `Skeleton`, `Tooltip`, `Toast`, `Dialog`, `EmptyState`
+- [x] `CodeBlock` (Shiki/Prism highlight, copy button via `useCopyToClipboard`), `DataTable` (sticky header, sortable, numeric right-align, zebra, horizontal scroll, virtualization for >200 rows)
+- [x] App shell: header (logo, schema button, theme toggle), centered content column, footer
+- [x] Component stories/demo page (or Storybook-lite route) to eyeball all states in both themes
 
 **Done when:** every primitive renders correctly in light/dark, keyboard focus visible, unit-tested for basic behavior.
 
