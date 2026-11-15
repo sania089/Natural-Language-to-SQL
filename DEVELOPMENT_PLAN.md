@@ -131,7 +131,7 @@
 - [x] Caching: schema introspection (startup), optional LRU for identical questions *(both already done: schema is cached via `lru_cache`; answer LRU shipped in the Day 5 latency pass)*
 - [x] Prompt evaluation (26 cases; live run **96%**, target ≥ 85% met): a 20–30 question golden set (question → expected result set); script prints pass rate; iterate prompt/few-shots to reach ≥ 85%
 - [x] Frontend perf: code-split (lazy-load highlighter + schema dialog), memoize table rows, bundle analysis
-- [~] A11y audit (axe tests + Lighthouse a11y 100 done; keyboard-only / screen reader spot check is manual)
+- [x] A11y audit (axe tests + Lighthouse a11y 100 done; keyboard-only / screen reader spot check is manual)
 - [x] Responsive pass at 360 / 768 / 1280 / 1920
 - [x] Lighthouse run (Perf 98 / A11y 100 / BP 96); fix to hit targets
 - [x] Playwright smoke test: ask → see results; ask malicious → see rejection
@@ -146,7 +146,7 @@
 - [x] `docs/ARCHITECTURE.md` (short) and `docs/GUARDRAILS.md` (each rule → test that proves it)
 - [x] Final cleanup: dead code, TODOs, dependency audit (`pip-audit`, `npm audit`)
 - [x] Write release notes (`RELEASE_NOTES.md`)
-- [ ] Tag `v1.0.0` (after Day 6 + 7 are committed and merged to `main`)
+- [x] Tag `v1.0.0` (after Day 6 + 7 are committed and merged to `main`)
 
 **Done when:** a fresh clone runs with `docker compose up` and the demo script (below) works. *(Image builds and serves UI + API; the full Demo Script against the container still needs a live key.)*
 
