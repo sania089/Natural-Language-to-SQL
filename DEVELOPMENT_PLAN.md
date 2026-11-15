@@ -113,21 +113,22 @@
 
 ### Day 5 — Main Experience (wiring UI ↔ API)
 **Outcome:** fully working app with all states.
-- [ ] Typed API client (`lib/api.ts`) + `useAskQuestion` (TanStack mutation) + `useSchema`
-- [ ] `QuestionInput`: autosize textarea, `Ctrl/Cmd+Enter` submit, char counter, disabled+spinner while loading
-- [ ] `ExampleChips` in the empty state (one click fills & submits)
-- [ ] Answer panel: SQL `CodeBlock`, validation `Badge`, row count + elapsed `Badge`s, `DataTable`
-- [ ] Error handling UI: `SQL_REJECTED` → friendly explanation of *which rule* was hit; rate-limit, network, LLM-down → `Alert` with retry
-- [ ] Schema browser `Dialog` (tables → columns/types) reusing `DataTable`/`Card`
-- [ ] Skeleton loaders, zero-rows empty state, `aria-live` announcement of results
-- [ ] Session history list (in-memory/localStorage) to re-open past answers
+- [x] Typed API client (`lib/api.ts`) + `useAskQuestion` (TanStack mutation) + `useSchema`
+- [x] `QuestionInput`: autosize textarea, `Ctrl/Cmd+Enter` submit, char counter, disabled+spinner while loading
+- [x] `ExampleChips` in the empty state (one click fills & submits)
+- [x] Answer panel: SQL `CodeBlock`, validation `Badge`, row count + elapsed `Badge`s, `DataTable`
+- [x] Error handling UI: `SQL_REJECTED` → friendly explanation of *which rule* was hit; rate-limit, network, LLM-down → `Alert` with retry
+- [x] Schema browser `Dialog` (tables → columns/types) reusing `DataTable`/`Card`
+- [x] Skeleton loaders, zero-rows empty state, `aria-live` announcement of results
+- [x] Session history list (in-memory/localStorage) to re-open past answers
+- [x] Latency pass (added after first live run was slow): `LLM_PROVIDER=groq` option, Gemini `reasoning_effort`, `max_tokens` + JSON mode, shared LLM HTTP client, LRU answer cache, per-step timing logs
 
-**Done when:** a non-technical user can go from landing to a result in <15 seconds with zero instructions.
+**Done when:** a non-technical user can go from landing to a result in <15 seconds with zero instructions. *(Code complete and tested; the <15 s check still needs a manual run against a live LLM key.)*
 
 ### Day 6 — Hardening, Performance, Accessibility
 **Outcome:** production-quality behavior.
 - [ ] Rate limiting (slowapi), CORS lock-down, input length validation, security headers
-- [ ] Caching: schema introspection (startup), optional LRU for identical questions
+- [x] Caching: schema introspection (startup), optional LRU for identical questions *(both already done: schema is cached via `lru_cache`; answer LRU shipped in the Day 5 latency pass)*
 - [ ] Prompt evaluation: a 20–30 question golden set (question → expected result set); script prints pass rate; iterate prompt/few-shots to reach ≥ 85%
 - [ ] Frontend perf: code-split (lazy-load highlighter + schema dialog), memoize table rows, bundle analysis
 - [ ] A11y audit (axe, keyboard-only walkthrough, screen reader spot check), contrast verification

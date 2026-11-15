@@ -1,8 +1,11 @@
 import { lazy, Suspense, useSyncExternalStore } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
+import { SchemaDialog } from '@/components/schema-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
+
+import Home from '@/pages/home'
 
 const ComponentsDemo = lazy(() => import('@/pages/components-demo'))
 
@@ -15,21 +18,12 @@ function subscribeToHash(callback: () => void): () => void {
   }
 }
 
-function Home() {
-  return (
-    <div>
-      <h1 className="text-3xl font-semibold">Natural Language to SQL</h1>
-      <p className="mt-2 text-muted">Ask questions about your data in plain English.</p>
-    </div>
-  )
-}
-
 export default function App() {
   const hash = useSyncExternalStore(subscribeToHash, () => window.location.hash)
   return (
     <TooltipProvider delayDuration={200}>
       <ToastProvider>
-        <AppShell>
+        <AppShell actions={<SchemaDialog />}>
           {hash === DEMO_HASH ? (
             <Suspense fallback={<Skeleton className="h-64 w-full" />}>
               <ComponentsDemo />

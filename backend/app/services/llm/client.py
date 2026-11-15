@@ -50,10 +50,14 @@ class OpenAICompatClient:
         backoff_base: float = 1.0,
         sleep: Callable[[float], None] = time.sleep,
         http: httpx.Client | None = None,
+        max_tokens: int | None = None,
+        extra_params: dict[str, Any] | None = None,
     ) -> None:
         self._url = base_url.rstrip("/") + "/chat/completions"
         self._headers = {"Authorization": f"Bearer {api_key}"}
         self._model = model
+        self._max_tokens = max_tokens
+        self._extra_params = extra_params or {}
         self._max_attempts = max_attempts
         self._backoff_base = backoff_base
         self._sleep = sleep
@@ -74,11 +78,17 @@ class OpenAICompatClient:
                 self._sleep(self._backoff_base * 2 ** (attempt - 1))
 
     def _call(self, messages: list[ChatMessage]) -> str:
-        payload = {
+        payload: dict[str, Any] = {
             "model": self._model,
             "messages": [m.model_dump() for m in messages],
             "temperature": 0,
+            # The prompt demands a JSON object; JSON mode makes malformed replies (and the
+            # repair round-trip they cause) much rarer.
+            "response_format": {"type": "json_object"},
+            **self._extra_params,
         }
+        if self._max_tokens is not None:
+            payload["max_tokens"] = self._max_tokens
         try:
             response = self._http.post(self._url, json=payload, headers=self._headers)
         except httpx.TimeoutException as exc:
@@ -113,10 +123,18 @@ def _extract_content(response: httpx.Response) -> str:
 
 
 def build_llm_client(settings: Settings) -> LlmClient:
+    extra: dict[str, Any] = {}
     if settings.llm_provider == "gemini":
         key, url, model = settings.gemini_api_key, GEMINI_BASE_URL, settings.gemini_model
+        extra["reasoning_effort"] = settings.gemini_reasoning_effort
     else:
         key, url, model = settings.groq_api_key, GROQ_BASE_URL, settings.groq_model
     if not key.get_secret_value():
         raise LlmError(f"No API key configured for provider '{settings.llm_provider}'.")
-    return OpenAICompatClient(api_key=key.get_secret_value(), base_url=url, model=model)
+    return OpenAICompatClient(
+        api_key=key.get_secret_value(),
+        base_url=url,
+        model=model,
+        max_tokens=settings.llm_max_tokens,
+        extra_params=extra,
+    )

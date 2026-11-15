@@ -15,6 +15,9 @@ Ask questions about a sample database in plain English. An LLM generates **read-
 - **Self-repair**: if validation or execution fails, the error is fed back to the model once for a corrected query
 - **Polished UI**: responsive, dark/light themes, keyboard accessible, loading/empty/error states
 - **Example questions** to get started in one click
+- **Friendly errors**: a blocked query explains *which rule* it hit; rate-limit, network and AI-outage errors offer a retry
+- **Schema browser** and **recent-question history** (kept in your browser, re-open without re-running the AI)
+- **Fast repeats**: identical questions are answered from an in-memory LRU cache; per-step timings (LLM / validation / execution) are logged
 
 ## How it works
 
@@ -112,13 +115,16 @@ npm run dev                                        # http://localhost:5173
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GEMINI_API_KEY` | — | Required (primary provider) |
-| `GROQ_API_KEY` | — | Optional fallback provider |
+| `GROQ_API_KEY` | — | Optional fallback provider (typically much faster than Gemini) |
 | `LLM_PROVIDER` | `gemini` | `gemini` or `groq` |
-| `GEMINI_MODEL` / `GROQ_MODEL` | see `.env.example` | Models used for SQL generation |
-| `DB_PATH` | `data/sample.db` | SQLite file (opened read-only) |
-| `MAX_ROWS` | `500` | Hard cap on returned rows |
-| `QUERY_TIMEOUT_SEC` | `5` | Execution timeout |
-| `RATE_LIMIT_PER_MIN` | `20` | Per-client request limit |
+| `GEMINI_MODEL` / `GROQ_MODEL` | see `.env.example` | Models used for SQL generation. Groq retires models; if you get a 404 / `LLM_UNAVAILABLE`, pick a current one from Groq's `/models` list |
+| `GEMINI_REASONING_EFFORT` | `low` | `low` / `medium` / `high`. Lower = faster Gemini answers (sent to Gemini only) |
+| `LLM_MAX_TOKENS` | `1024` | Reply cap; includes reasoning tokens, so keep headroom (raise if replies come back empty) |
+| `ANSWER_CACHE_SIZE` | `128` | LRU cache of answers for repeated questions; `0` disables |
+| `DATABASE_PATH` | `data/ecommerce.db` | SQLite file (opened read-only) |
+| `MAX_ROWS` | `200` | Hard cap on returned rows |
+| `QUERY_TIMEOUT_SECONDS` | `5` | Execution timeout |
+| `MAX_QUESTION_LENGTH` | `500` | Longest accepted question |
 
 ## API
 
@@ -129,15 +135,19 @@ npm run dev                                        # http://localhost:5173
 Response:
 ```json
 {
+  "request_id": "c3035c2fbc6b",
+  "question": "Top 5 customers by total spend in 2024",
   "sql": "SELECT ... LIMIT 5",
-  "validation": { "ok": true, "warnings": [] },
   "columns": ["customer", "total_spend"],
   "rows": [["Ada", 1234.5]],
   "row_count": 5,
-  "elapsed_ms": 42
+  "truncated": false,
+  "elapsed_ms": 42,
+  "warnings": [],
+  "repaired": false
 }
 ```
-Rejected queries return `422` with `{ "error": { "code": "SQL_REJECTED", "reason": "Only SELECT statements are allowed" } }`.
+Rejected queries return `422` with `{ "error": { "code": "SQL_REJECTED", "message": "...", "rule": "forbidden_operation", "request_id": "..." } }`.
 
 `GET /api/schema` — tables/columns exposed to the model · `GET /api/health`
 
@@ -157,7 +167,7 @@ cd frontend && npm test
 
 ## Roadmap
 
-Query history · CSV export · multiple databases · query explanation · streaming responses
+Server-side query history · CSV export · multiple databases · query explanation · streaming responses
 
 ## License
 
