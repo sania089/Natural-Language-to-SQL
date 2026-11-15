@@ -140,14 +140,15 @@
 
 ### Day 7 — Polish, Docs, Release
 **Outcome:** project closed and demo-ready.
-- [ ] Visual polish: spacing/alignment pass, subtle motion, favicon, meta/OG tags, 404/error boundary
-- [ ] Dockerfile(s) + `docker-compose.yml` for one-command run
-- [ ] README final pass: screenshots/GIF, architecture diagram, guardrail table verified against the code
-- [ ] `docs/ARCHITECTURE.md` (short) and `docs/GUARDRAILS.md` (each rule → test that proves it)
-- [ ] Final cleanup: dead code, TODOs, dependency audit (`pip-audit`, `npm audit`)
-- [ ] Tag `v1.0.0`, write release notes
+- [x] Visual polish: favicon, meta/OG tags, 404/error boundary, swipe-to-dismiss toasts (spacing pass judged unnecessary)
+- [x] Dockerfile(s) + `docker-compose.yml` for one-command run
+- [x] README final pass: screenshots, architecture diagram, guardrail table verified against the code, Docker + Render sections
+- [x] `docs/ARCHITECTURE.md` (short) and `docs/GUARDRAILS.md` (each rule → test that proves it)
+- [x] Final cleanup: dead code, TODOs, dependency audit (`pip-audit`, `npm audit`)
+- [x] Write release notes (`RELEASE_NOTES.md`)
+- [ ] Tag `v1.0.0` (after Day 6 + 7 are committed and merged to `main`)
 
-**Done when:** a fresh clone runs with `docker compose up` and the demo script (below) works.
+**Done when:** a fresh clone runs with `docker compose up` and the demo script (below) works. *(Image builds and serves UI + API; the full Demo Script against the container still needs a live key.)*
 
 ### Day 8 — Small-Scale Hosting (learning project, shared with a few people only)
 **Outcome:** a live, HTTPS URL you can send to friends, with the LLM bill and key protected. Deliberately *not* in scope: Redis, accounts, captcha, multi-instance scaling, user-supplied databases, a full privacy/legal page.

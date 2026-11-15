@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import { Alert } from './alert'
@@ -117,7 +117,9 @@ describe('Toast', () => {
     await userEvent.click(screen.getByRole('button', { name: 'fire' }))
     expect(screen.getByText('Saved')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }))
-    expect(screen.queryByText('Saved')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByText('Saved')).not.toBeInTheDocument()
+    })
   })
 
   it('throws when used outside the provider', () => {

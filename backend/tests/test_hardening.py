@@ -79,3 +79,16 @@ def test_cors_only_allows_configured_origin(client: TestClient) -> None:
 def test_overlong_question_rejected(seeded_db: Path, length: int) -> None:
     r = _client(seeded_db).post("/api/ask", json={"question": "a" * length})
     assert r.status_code == 422
+
+
+def test_static_ui_served_with_app_csp(tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text("<html>ui</html>", encoding="utf-8")
+    ui_client = TestClient(create_app(Settings(static_dir=tmp_path)))
+    page = ui_client.get("/")
+    assert page.status_code == 200
+    assert "script-src 'self'" in page.headers["Content-Security-Policy"]
+    assert (
+        ui_client.get("/api/health")
+        .headers["Content-Security-Policy"]
+        .startswith("default-src 'none'")
+    )

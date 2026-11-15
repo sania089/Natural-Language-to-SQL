@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api import ask, health, schema
 from app.config import Settings, get_settings
@@ -30,6 +31,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     for module in (health, ask, schema):
         app.include_router(module.router, prefix="/api")
+    if settings.static_dir and settings.static_dir.is_dir():
+        # Mounted last so /api routes win; the UI uses hash routing, so no SPA fallback needed.
+        app.mount("/", StaticFiles(directory=settings.static_dir, html=True), name="ui")
     return app
 
 
