@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from app.dependencies import PipelineDep, SettingsDep
+from app.dependencies import PipelineDep, SettingsDep, enforce_rate_limit
 from app.errors import InvalidQuestionError
 from app.request_context import request_id_var
 
@@ -13,7 +13,8 @@ router = APIRouter(tags=["ask"])
 
 
 class AskRequest(BaseModel):
-    question: str = Field(min_length=1)
+    # Hard cap rejects absurd payloads at parse time; the setting gives the friendly message.
+    question: str = Field(min_length=1, max_length=5_000)
 
 
 class AskResponse(BaseModel):
@@ -29,7 +30,7 @@ class AskResponse(BaseModel):
     repaired: bool
 
 
-@router.post("/ask", response_model=AskResponse)
+@router.post("/ask", response_model=AskResponse, dependencies=[Depends(enforce_rate_limit)])
 def ask(body: AskRequest, pipeline: PipelineDep, settings: SettingsDep) -> AskResponse:
     question = body.question.strip()
     if not question:

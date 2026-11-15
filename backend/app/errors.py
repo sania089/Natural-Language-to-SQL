@@ -5,10 +5,17 @@ class AppError(Exception):
     status_code = 500
     code = "INTERNAL_ERROR"
 
-    def __init__(self, message: str, *, extra: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        extra: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.extra = extra or {}
+        self.headers = headers or {}
 
 
 class InvalidQuestionError(AppError):
@@ -49,3 +56,8 @@ class LlmRateLimitError(LlmError):
 class LlmTimeoutError(LlmError):
     status_code = 504
     code = "LLM_TIMEOUT"
+
+
+class RateLimitedError(AppError):
+    status_code = 429
+    code = "RATE_LIMITED"

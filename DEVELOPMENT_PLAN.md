@@ -1,6 +1,6 @@
 # Development Plan — Natural Language → SQL
 
-**Goal:** ship a polished, safe, well-tested v1 in **7 working days**, with minimal scope creep.
+**Goal:** ship a polished, safe, well-tested v1 in **8 working days** (7 + a short hosting day), with minimal scope creep.
 **Principle:** build the thin vertical slice first (question → validated SQL → results), then harden, then polish.
 
 ---
@@ -127,14 +127,14 @@
 
 ### Day 6 — Hardening, Performance, Accessibility
 **Outcome:** production-quality behavior.
-- [ ] Rate limiting (slowapi), CORS lock-down, input length validation, security headers
+- [x] Rate limiting (in-process sliding window, no extra dependency), CORS lock-down, input length validation, security headers
 - [x] Caching: schema introspection (startup), optional LRU for identical questions *(both already done: schema is cached via `lru_cache`; answer LRU shipped in the Day 5 latency pass)*
-- [ ] Prompt evaluation: a 20–30 question golden set (question → expected result set); script prints pass rate; iterate prompt/few-shots to reach ≥ 85%
-- [ ] Frontend perf: code-split (lazy-load highlighter + schema dialog), memoize table rows, bundle analysis
-- [ ] A11y audit (axe, keyboard-only walkthrough, screen reader spot check), contrast verification
-- [ ] Responsive pass at 360 / 768 / 1280 / 1920
-- [ ] Lighthouse run; fix to hit targets
-- [ ] Playwright smoke test: ask → see results; ask malicious → see rejection
+- [x] Prompt evaluation (26 cases; live run **96%**, target ≥ 85% met): a 20–30 question golden set (question → expected result set); script prints pass rate; iterate prompt/few-shots to reach ≥ 85%
+- [x] Frontend perf: code-split (lazy-load highlighter + schema dialog), memoize table rows, bundle analysis
+- [~] A11y audit (axe tests + Lighthouse a11y 100 done; keyboard-only / screen reader spot check is manual)
+- [x] Responsive pass at 360 / 768 / 1280 / 1920
+- [x] Lighthouse run (Perf 98 / A11y 100 / BP 96); fix to hit targets
+- [x] Playwright smoke test: ask → see results; ask malicious → see rejection
 
 **Done when:** test suites + Lighthouse targets + golden-set pass rate are all met.
 
@@ -149,11 +149,28 @@
 
 **Done when:** a fresh clone runs with `docker compose up` and the demo script (below) works.
 
+### Day 8 — Small-Scale Hosting (learning project, shared with a few people only)
+**Outcome:** a live, HTTPS URL you can send to friends, with the LLM bill and key protected. Deliberately *not* in scope: Redis, accounts, captcha, multi-instance scaling, user-supplied databases, a full privacy/legal page.
+- [ ] **Prod config safety**: `ENVIRONMENT=production` setting; fail fast at startup if the chosen provider's API key is missing; disable `/docs`, `/redoc`, `/openapi.json` in production; `CORS_ORIGINS` set to the real frontend URL only
+- [ ] **Proxy-aware client IP**: run uvicorn with `--proxy-headers` + `--forwarded-allow-ips` so the rate limiter sees real users, not the host's proxy (otherwise everyone shares one limit); test it
+- [ ] **Daily LLM budget cap**: global per-day limit on LLM calls (new `DAILY_LLM_CALL_LIMIT` setting, in-memory counter, friendly 503 `DAILY_LIMIT_REACHED` + UI message). Cached answers don't count. Protects your free-tier key if the link gets shared further
+- [ ] **Single-instance deploy** (Render / Railway / Fly.io for the API in the Day 7 Docker image; Vercel / Netlify / Cloudflare Pages for the frontend, or one container serving both so `/api` is same-origin and CORS is a non-issue). Secrets go in the platform's env/secret store, never in the image or git; HTTPS from the platform
+- [ ] **Real `/api/health`**: also verify the database file opens, and point the platform health check at it
+- [ ] **Free uptime check + error visibility**: UptimeRobot (or similar) ping on `/api/health`; Sentry free tier (or just platform logs) so errors are not silent
+- [ ] **CI deploy step**: deploy from `main` after lint/typecheck/tests pass; keep the previous release so you can roll back
+- [ ] **README "Deploy" section**: env vars to set, how to rotate the API key, and a one-line note that questions are sent to the chosen LLM provider
+- [ ] Production smoke check: run the Demo Script against the live URL (including killing/rotating the key → friendly error)
+
+**Done when:** the live URL passes the Demo Script, `/docs` is off, the rate limit and daily cap both trigger correctly behind the proxy, and an uptime check is green.
+
+*(If you ever open it to real public traffic, revisit: Redis-backed limiter/cache, bot protection, paid LLM tier, privacy/terms page, auth.)*
+
 ---
 
 ## Scope Control (to close fast)
 
 **In v1:** single sample DB, single question → answer flow, guardrails, schema viewer, session history, themes.
+**Hosting (Day 8):** small private deployment only: single instance, in-memory limiter/cache, shared with a few people.
 **Deferred (post-v1):** auth, multiple DBs, CSV export, charts, streaming, query explanations, persistent server-side history.
 If a day slips, cut in this order: session history → schema dialog polish → Docker → golden-set size. **Never cut:** validator tests, read-only DB, error/empty/loading states.
 

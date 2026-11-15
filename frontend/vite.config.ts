@@ -9,6 +9,20 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Stable vendor chunks cache across app deploys.
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined
+          if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return 'react'
+          if (id.includes('@radix-ui')) return 'radix'
+          if (id.includes('@tanstack')) return 'query'
+          return undefined
+        },
+      },
+    },
+  },
   server: {
     proxy: { '/api': 'http://localhost:8000' },
   },
@@ -17,5 +31,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })

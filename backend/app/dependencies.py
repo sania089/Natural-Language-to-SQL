@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from app.config import Settings
+from app.errors import RateLimitedError
 from app.services.llm.client import LlmClient, build_llm_client
 from app.services.pipeline import Pipeline
 
@@ -15,6 +16,17 @@ def get_app_settings(request: Request) -> Settings:
 
 
 SettingsDep = Annotated[Settings, Depends(get_app_settings)]
+
+
+def enforce_rate_limit(request: Request) -> None:
+    """Per-client limit; raises 429 with Retry-After. Limiter lives on app.state (one per app)."""
+    client_ip = request.client.host if request.client else "unknown"
+    retry_after = request.app.state.rate_limiter.check(client_ip)
+    if retry_after is not None:
+        raise RateLimitedError(
+            f"Too many requests. Please wait {retry_after}s and try again.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
 
 def get_llm_client(request: Request, settings: SettingsDep) -> LlmClient:

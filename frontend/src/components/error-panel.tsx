@@ -61,6 +61,7 @@ export function describeError(error: Error): ErrorView {
         message: error.message,
         retryable: false,
       }
+    case 'RATE_LIMITED':
     case 'LLM_RATE_LIMITED':
       return {
         variant: 'warning',
