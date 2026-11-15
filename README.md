@@ -129,8 +129,11 @@ The image builds the UI, seeds the sample database and serves everything from on
 ### Deploy to Render
 
 1. Push the repo to GitHub, then in Render choose **New + → Blueprint** and select it (uses `render.yaml`), or create a **Web Service** with the Docker runtime.
-2. Set `GEMINI_API_KEY` (and/or `GROQ_API_KEY`) in the Render dashboard. Never commit keys.
-3. Health check path: `/api/health`. Run a **single instance** (the rate limiter and cache are in-memory).
+2. Set `GEMINI_API_KEY` (and/or `GROQ_API_KEY`) in the Render dashboard. Never commit keys. `render.yaml` already sets `ENVIRONMENT=production` (startup fails without the key, `/docs` is off) and the health check to `/api/health`.
+3. Run a **single instance** (rate limiter, daily cap and cache are in-memory). The container runs uvicorn with `--proxy-headers`, so the rate limit applies per real client, not per Render proxy.
+4. Optional: add an UptimeRobot (or similar) check on `https://<your-app>/api/health`.
+5. **Rotate a key:** create a new key at the provider, update the env var in the Render dashboard (Render redeploys), then revoke the old key.
+6. **Roll back:** Render dashboard → Events/Deploys → *Rollback* to the previous deploy.
 
 Note: questions you type are sent to the configured LLM provider.
 
@@ -150,6 +153,8 @@ Note: questions you type are sent to the configured LLM provider.
 | `QUERY_TIMEOUT_SECONDS` | `5` | Execution timeout |
 | `MAX_QUESTION_LENGTH` | `500` | Longest accepted question |
 | `RATE_LIMIT_PER_MINUTE` | `20` | Per-client requests/minute on `/api/ask` (`429` + `Retry-After` when exceeded); `0` disables |
+| `ENVIRONMENT` | `development` | `production` fails at startup if the chosen provider's key is missing and disables `/docs`, `/redoc`, `/openapi.json` |
+| `DAILY_LLM_CALL_LIMIT` | `500` | Global LLM calls per UTC day (cached answers are free); then `503 DAILY_LIMIT_REACHED`. `0` disables |
 | `STATIC_DIR` | — | Built frontend to serve at `/` (set automatically in the Docker image) |
 
 ## API
@@ -177,7 +182,7 @@ Rejected queries return `422` with `{ "error": { "code": "SQL_REJECTED", "messag
 
 Exceeding the rate limit returns `429` with code `RATE_LIMITED`. All responses carry security headers (CSP, `nosniff`, `X-Frame-Options: DENY`, ...).
 
-`GET /api/schema` — tables/columns exposed to the model · `GET /api/health`
+`GET /api/schema` — tables/columns exposed to the model · `GET /api/health` (checks the database opens; `503` if not)
 
 ## Testing
 

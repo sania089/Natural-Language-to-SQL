@@ -152,14 +152,14 @@
 
 ### Day 8 — Small-Scale Hosting (learning project, shared with a few people only)
 **Outcome:** a live, HTTPS URL you can send to friends, with the LLM bill and key protected. Deliberately *not* in scope: Redis, accounts, captcha, multi-instance scaling, user-supplied databases, a full privacy/legal page.
-- [ ] **Prod config safety**: `ENVIRONMENT=production` setting; fail fast at startup if the chosen provider's API key is missing; disable `/docs`, `/redoc`, `/openapi.json` in production; `CORS_ORIGINS` set to the real frontend URL only
-- [ ] **Proxy-aware client IP**: run uvicorn with `--proxy-headers` + `--forwarded-allow-ips` so the rate limiter sees real users, not the host's proxy (otherwise everyone shares one limit); test it
-- [ ] **Daily LLM budget cap**: global per-day limit on LLM calls (new `DAILY_LLM_CALL_LIMIT` setting, in-memory counter, friendly 503 `DAILY_LIMIT_REACHED` + UI message). Cached answers don't count. Protects your free-tier key if the link gets shared further
-- [ ] **Single-instance deploy** (Render / Railway / Fly.io for the API in the Day 7 Docker image; Vercel / Netlify / Cloudflare Pages for the frontend, or one container serving both so `/api` is same-origin and CORS is a non-issue). Secrets go in the platform's env/secret store, never in the image or git; HTTPS from the platform
-- [ ] **Real `/api/health`**: also verify the database file opens, and point the platform health check at it
-- [ ] **Free uptime check + error visibility**: UptimeRobot (or similar) ping on `/api/health`; Sentry free tier (or just platform logs) so errors are not silent
-- [ ] **CI deploy step**: deploy from `main` after lint/typecheck/tests pass; keep the previous release so you can roll back
-- [ ] **README "Deploy" section**: env vars to set, how to rotate the API key, and a one-line note that questions are sent to the chosen LLM provider
+- [x] **Prod config safety**: `ENVIRONMENT=production` setting; fail fast at startup if the chosen provider's API key is missing; disable `/docs`, `/redoc`, `/openapi.json` in production; `CORS_ORIGINS` set to the real frontend URL only
+- [x] **Proxy-aware client IP**: run uvicorn with `--proxy-headers` + `--forwarded-allow-ips` so the rate limiter sees real users, not the host's proxy (otherwise everyone shares one limit); test it
+- [x] **Daily LLM budget cap**: global per-day limit on LLM calls (new `DAILY_LLM_CALL_LIMIT` setting, in-memory counter, friendly 503 `DAILY_LIMIT_REACHED` + UI message). Cached answers don't count. Protects your free-tier key if the link gets shared further
+- [~] **Single-instance deploy** (Dockerfile + `render.yaml` ready; creating the Render service + secrets is on you) (Render / Railway / Fly.io for the API in the Day 7 Docker image; Vercel / Netlify / Cloudflare Pages for the frontend, or one container serving both so `/api` is same-origin and CORS is a non-issue). Secrets go in the platform's env/secret store, never in the image or git; HTTPS from the platform
+- [x] **Real `/api/health`**: also verify the database file opens, and point the platform health check at it
+- [~] **Free uptime check + error visibility**: UptimeRobot (or similar) ping on `/api/health`; Sentry free tier (or just platform logs) so errors are not silent
+- [~] **CI deploy step** (`autoDeployTrigger: checksPass` set in `render.yaml`; you must enable it when connecting the repo): deploy from `main` after lint/typecheck/tests pass; keep the previous release so you can roll back
+- [x] **README "Deploy" section**: env vars to set, how to rotate the API key, and a one-line note that questions are sent to the chosen LLM provider
 - [ ] Production smoke check: run the Demo Script against the live URL (including killing/rotating the key → friendly error)
 
 **Done when:** the live URL passes the Demo Script, `/docs` is off, the rate limit and daily cap both trigger correctly behind the proxy, and an uptime check is green.
