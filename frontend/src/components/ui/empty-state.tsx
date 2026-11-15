@@ -18,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
           <Icon className="h-6 w-6" aria-hidden="true" />
         </span>
       )}
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h2 className="text-lg font-semibold">{title}</h2>
       {description && <p className="max-w-md text-sm text-muted">{description}</p>}
       {action}
     </div>

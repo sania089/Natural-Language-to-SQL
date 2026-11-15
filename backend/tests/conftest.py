@@ -9,6 +9,12 @@ from app.db.seed import seed_database
 from app.main import create_app
 
 
+@pytest.fixture(autouse=True)
+def _ignore_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep tests hermetic: a developer's local .env (real keys, provider) must not leak in."""
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
+
+
 @pytest.fixture(scope="session")
 def seeded_db(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("db") / "test.db"

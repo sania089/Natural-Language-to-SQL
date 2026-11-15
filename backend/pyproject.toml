@@ -40,6 +40,7 @@ select = ["E", "F", "I", "B", "UP", "SIM", "N", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "S608"]
+"app/evals/golden_set.py" = ["S608"]  # f-strings splice a constant fragment, no user input
 
 [tool.mypy]
 python_version = "3.11"

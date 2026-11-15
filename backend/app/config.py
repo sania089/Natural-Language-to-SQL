@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     max_rows: int = Field(default=200, ge=1, le=10_000)
     query_timeout_seconds: float = Field(default=5.0, gt=0, le=60)
     max_question_length: int = Field(default=500, ge=1, le=5_000)
+    # Per-client requests/minute on /api/ask (each one can cost an LLM call); 0 disables.
+    rate_limit_per_minute: int = Field(default=20, ge=0, le=10_000)
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:5173"]
 

@@ -125,6 +125,7 @@ npm run dev                                        # http://localhost:5173
 | `MAX_ROWS` | `200` | Hard cap on returned rows |
 | `QUERY_TIMEOUT_SECONDS` | `5` | Execution timeout |
 | `MAX_QUESTION_LENGTH` | `500` | Longest accepted question |
+| `RATE_LIMIT_PER_MINUTE` | `20` | Per-client requests/minute on `/api/ask` (`429` + `Retry-After` when exceeded); `0` disables |
 
 ## API
 
@@ -149,13 +150,19 @@ Response:
 ```
 Rejected queries return `422` with `{ "error": { "code": "SQL_REJECTED", "message": "...", "rule": "forbidden_operation", "request_id": "..." } }`.
 
+Exceeding the rate limit returns `429` with code `RATE_LIMITED`. All responses carry security headers (CSP, `nosniff`, `X-Frame-Options: DENY`, ...).
+
 `GET /api/schema` — tables/columns exposed to the model · `GET /api/health`
 
 ## Testing
 
 ```bash
 cd backend && pytest -q          # includes an adversarial SQL-injection suite
-cd frontend && npm test
+cd frontend && npm test         # unit/component tests + axe accessibility checks
+cd frontend && npm run e2e    # Playwright smoke tests (one-time: npx playwright install chromium)
+
+# Prompt evaluation: 26 golden questions through the live LLM (needs an API key in .env)
+cd backend && python -m app.evals.run_golden   # prints pass rate; exit 1 if below 85%
 ```
 
 ## Example questions
