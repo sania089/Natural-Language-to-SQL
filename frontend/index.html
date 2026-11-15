@@ -7,13 +7,16 @@
       name="description"
       content="Ask questions about a database in plain English. Safe, read-only SQL."
     />
-    <script>
-      // Apply the saved theme before first paint to avoid a flash.
-      try {
-        var t = localStorage.getItem('nl-sql-theme')
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
-      } catch (e) {}
-    </script>
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Natural Language to SQL" />
+    <meta
+      property="og:description"
+      content="Ask questions about a database in plain English. Safe, read-only SQL."
+    />
+    <meta name="twitter:card" content="summary" />
+    <script src="/theme-init.js"></script>
     <title>Natural Language to SQL</title>
   </head>
   <body>

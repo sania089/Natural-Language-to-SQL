@@ -6,6 +6,7 @@ import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 import Home from '@/pages/home'
+import NotFound from '@/pages/not-found'
 
 const ComponentsDemo = lazy(() => import('@/pages/components-demo'))
 
@@ -28,8 +29,10 @@ export default function App() {
             <Suspense fallback={<Skeleton className="h-64 w-full" />}>
               <ComponentsDemo />
             </Suspense>
-          ) : (
+          ) : hash === '' || hash === '#' || hash === '#main' ? (
             <Home />
+          ) : (
+            <NotFound />
           )}
         </AppShell>
       </ToastProvider>
