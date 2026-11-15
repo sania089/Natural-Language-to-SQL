@@ -1,10 +1,11 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { memo, useMemo, useRef, useState } from 'react'
+import type { Cell } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { EmptyState } from './ui/empty-state'
 
-export type Cell = string | number | boolean | null
+export type { Cell }
 
 export interface DataTableProps {
   columns: string[]

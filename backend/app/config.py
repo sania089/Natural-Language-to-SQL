@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     llm_provider: Literal["gemini", "groq"] = "gemini"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = "gemini-3.5-flash"
+    # Gemini 3.x is a reasoning model; lower effort trades depth for much lower latency.
+    gemini_reasoning_effort: Literal["low", "medium", "high"] = "low"
+    # Caps the reply (includes reasoning tokens, so keep generous headroom over the SQL itself).
+    llm_max_tokens: int = Field(default=1024, ge=64, le=8192)
+    answer_cache_size: int = Field(default=128, ge=0, le=10_000)  # 0 disables the cache
     groq_api_key: SecretStr = SecretStr("")
     groq_model: str = "llama-3.3-70b-versatile"
     database_path: Path = REPO_ROOT / "data" / "ecommerce.db"

@@ -1,6 +1,7 @@
 """question -> prompt -> LLM -> validate -> execute, with a single repair retry."""
 
 import logging
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -9,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.db.connection import connect_readonly
 from app.errors import AppError, QueryFailedError, SqlRejectedError
+from app.services.answer_cache import AnswerCache, cache_key
 from app.services.executor import QueryResult, execute_query
 from app.services.llm.client import ChatMessage, LlmClient
 from app.services.llm_output import parse_llm_output
@@ -19,6 +21,10 @@ from app.services.sql_validator import validate_sql
 log = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 2  # first try + exactly one repair
+
+
+def _ms_since(started: float) -> float:
+    return (time.perf_counter() - started) * 1000
 
 
 class AskResult(BaseModel):
@@ -47,16 +53,29 @@ class Pipeline:
     db_path: Path
     max_rows: int
     timeout_seconds: float
+    cache: AnswerCache | None = None
 
     @property
     def schema(self) -> SchemaInfo:
         return get_schema(self.db_path)
 
     def ask(self, question: str) -> AskResult:
+        key = cache_key(self.db_path, question)
+        if self.cache and (hit := self.cache.get(key)) is not None:
+            log.info("answer served from cache")
+            return hit
+        result = self._generate(question)
+        if self.cache:
+            self.cache.put(key, result)
+        return result
+
+    def _generate(self, question: str) -> AskResult:
         messages = build_messages(get_schema_block(self.db_path), question)
         failure: AppError | None = None
         for attempt in range(MAX_ATTEMPTS):
+            started = time.perf_counter()
             raw = self.llm.complete(messages)
+            log.info("llm call took %.0f ms (attempt %d)", _ms_since(started), attempt + 1)
             candidate = parse_llm_output(raw)
             try:
                 return self._validate_and_run(candidate, repaired=attempt > 0)
@@ -69,7 +88,9 @@ class Pipeline:
         raise failure  # type: ignore[misc]
 
     def _validate_and_run(self, candidate: str, *, repaired: bool) -> AskResult:
+        started = time.perf_counter()
         verdict = validate_sql(candidate, self.schema, max_rows=self.max_rows)
+        log.info("validation took %.1f ms", _ms_since(started))
         if not verdict.ok or verdict.sql_normalized is None:
             raise SqlRejectedError(
                 verdict.reason or "The generated query was rejected.",
@@ -81,6 +102,7 @@ class Pipeline:
             max_rows=self.max_rows,
             timeout_seconds=self.timeout_seconds,
         )
+        log.info("execution took %.1f ms", result.elapsed_ms)
         return AskResult(
             sql=verdict.sql_normalized, result=result, warnings=verdict.warnings, repaired=repaired
         )

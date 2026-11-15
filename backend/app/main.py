@@ -7,6 +7,7 @@ from app.api import ask, health, schema
 from app.config import Settings, get_settings
 from app.error_handlers import register_error_handlers
 from app.logging_config import configure_logging
+from app.services.answer_cache import AnswerCache
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -15,6 +16,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="Natural Language to SQL", version="0.1.0")
     app.state.settings = settings
+    app.state.answer_cache = AnswerCache(settings.answer_cache_size)
     register_error_handlers(app)
     app.add_middleware(
         CORSMiddleware,

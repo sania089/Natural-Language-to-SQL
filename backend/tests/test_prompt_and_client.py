@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +59,34 @@ def test_success_first_try_sends_auth_and_model() -> None:
     assert c.complete(MSGS) == "ok" and len(seen) == 1 and sleeps == []
     assert str(seen[0].url) == "https://llm.test/v1/chat/completions"
     assert seen[0].headers["Authorization"] == "Bearer k"
+
+
+def test_payload_requests_json_mode_and_extras() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return _ok()
+
+    c = OpenAICompatClient(
+        api_key="k",
+        base_url="https://llm.test/v1",
+        model="m",
+        max_tokens=256,
+        extra_params={"reasoning_effort": "low"},
+        http=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    c.complete(MSGS)
+    payload = json.loads(seen[0].content)
+    assert payload["response_format"] == {"type": "json_object"}
+    assert payload["max_tokens"] == 256 and payload["reasoning_effort"] == "low"
+
+
+def test_reasoning_effort_only_sent_to_gemini() -> None:
+    gemini = build_llm_client(Settings(gemini_api_key="x"))  # type: ignore[arg-type]
+    groq = build_llm_client(Settings(llm_provider="groq", groq_api_key="x"))  # type: ignore[arg-type]
+    assert gemini._extra_params == {"reasoning_effort": "low"}  # type: ignore[attr-defined]
+    assert groq._extra_params == {}  # type: ignore[attr-defined]
 
 
 def test_retries_with_backoff_then_succeeds() -> None:

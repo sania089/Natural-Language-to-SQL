@@ -41,6 +41,31 @@ def test_happy_path(make_client: Factory) -> None:
     assert fake.calls[0][-1].content == "<question>top 5 customers by spend</question>"
 
 
+def test_repeat_question_is_served_from_cache(make_client: Factory) -> None:
+    fake = FakeLlmClient(sql_reply(COUNT))
+    client = make_client(fake)
+    first = client.post("/api/ask", json={"question": "How many customers?"})
+    second = client.post("/api/ask", json={"question": "  how   MANY customers? "})
+    assert first.status_code == second.status_code == 200
+    assert first.json()["rows"] == second.json()["rows"]
+    assert len(fake.calls) == 1  # second request never reached the LLM
+
+
+def test_failures_are_not_cached(make_client: Factory) -> None:
+    fake = FakeLlmClient(sql_reply("DROP TABLE x"), sql_reply("DROP TABLE x"), sql_reply(COUNT))
+    client = make_client(fake)
+    assert client.post("/api/ask", json={"question": "q"}).status_code == 422
+    assert client.post("/api/ask", json={"question": "q"}).status_code == 200
+
+
+def test_cache_can_be_disabled(make_client: Factory) -> None:
+    fake = FakeLlmClient(sql_reply(COUNT), sql_reply(COUNT))
+    client = make_client(fake, answer_cache_size=0)
+    client.post("/api/ask", json={"question": "q"})
+    client.post("/api/ask", json={"question": "q"})
+    assert len(fake.calls) == 2
+
+
 def test_fenced_sql_is_accepted(make_client: Factory) -> None:
     fake = FakeLlmClient(f"```sql\n{COUNT}\n```")
     r = make_client(fake).post("/api/ask", json={"question": "how many customers"})
