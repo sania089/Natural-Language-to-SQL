@@ -117,6 +117,7 @@ describe('describeError', () => {
 
   it('treats rate limits and LLM outages as retryable', () => {
     expect(describeError(new ApiError('x', 429, 'LLM_RATE_LIMITED')).retryable).toBe(true)
+    expect(describeError(new ApiError('x', 503, 'DAILY_LIMIT_REACHED')).retryable).toBe(false)
     expect(describeError(new ApiError('x', 502, 'LLM_UNAVAILABLE')).retryable).toBe(true)
   })
 })

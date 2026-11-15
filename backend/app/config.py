@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +15,7 @@ class Settings(BaseSettings):
         env_file=REPO_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
     )
 
+    environment: Literal["development", "production"] = "development"
     llm_provider: Literal["gemini", "groq"] = "gemini"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = "gemini-3.5-flash"
@@ -31,10 +32,24 @@ class Settings(BaseSettings):
     max_question_length: int = Field(default=500, ge=1, le=5_000)
     # Per-client requests/minute on /api/ask (each one can cost an LLM call); 0 disables.
     rate_limit_per_minute: int = Field(default=20, ge=0, le=10_000)
+    # Global cap on LLM calls per UTC day (cache hits are free); 0 disables.
+    daily_llm_call_limit: int = Field(default=500, ge=0, le=1_000_000)
     # Built frontend to serve at "/" (set in the Docker image); unset = API only.
     static_dir: Path | None = None
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:5173"]
+
+    @model_validator(mode="after")
+    def _require_key_in_production(self) -> "Settings":
+        """Fail fast at startup rather than on the first user's question."""
+        key = self.gemini_api_key if self.llm_provider == "gemini" else self.groq_api_key
+        if self.environment == "production" and not key.get_secret_value():
+            raise ValueError(f"{self.llm_provider.upper()}_API_KEY must be set in production")
+        return self
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
 
 
 @lru_cache

@@ -58,6 +58,11 @@ class LlmTimeoutError(LlmError):
     code = "LLM_TIMEOUT"
 
 
+class DailyLimitReachedError(AppError):
+    status_code = 503
+    code = "DAILY_LIMIT_REACHED"
+
+
 class RateLimitedError(AppError):
     status_code = 429
     code = "RATE_LIMITED"

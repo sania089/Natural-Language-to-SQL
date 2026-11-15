@@ -69,6 +69,14 @@ export function describeError(error: Error): ErrorView {
         message: 'The AI service is rate-limited right now. Wait a few seconds and try again.',
         retryable: true,
       }
+    case 'DAILY_LIMIT_REACHED':
+      return {
+        variant: 'warning',
+        title: 'Daily limit reached',
+        message:
+          'This demo has used up its daily quota of AI questions. Please come back tomorrow.',
+        retryable: false,
+      }
     case 'LLM_UNAVAILABLE':
     case 'LLM_TIMEOUT':
       return {

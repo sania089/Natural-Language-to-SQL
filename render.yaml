@@ -4,11 +4,19 @@ services:
     name: nl-to-sql
     runtime: docker
     plan: free
+    numInstances: 1           # in-memory limiter/cache: keep a single instance
     healthCheckPath: /api/health
+    autoDeployTrigger: checksPass   # deploy from the linked branch only after CI passes
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: LLM_PROVIDER
         value: gemini
+      - key: CORS_ORIGINS
+        value: "[]"           # UI and API share one origin, so no cross-origin access is needed
+      - key: DAILY_LLM_CALL_LIMIT
+        value: "300"
       - key: GEMINI_API_KEY
-        sync: false   # entered in the Render dashboard, never committed
+        sync: false           # entered in the Render dashboard, never committed
       - key: GROQ_API_KEY
         sync: false

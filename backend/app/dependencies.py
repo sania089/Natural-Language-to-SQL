@@ -47,6 +47,7 @@ def get_pipeline(
         max_rows=settings.max_rows,
         timeout_seconds=settings.query_timeout_seconds,
         cache=request.app.state.answer_cache,
+        budget=request.app.state.daily_budget,
     )
 
 

@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 from app.db.connection import connect_readonly
 from app.errors import AppError, QueryFailedError, SqlRejectedError
 from app.services.answer_cache import AnswerCache, cache_key
+from app.services.daily_budget import DailyBudget
 from app.services.executor import QueryResult, execute_query
 from app.services.llm.client import ChatMessage, LlmClient
 from app.services.llm_output import parse_llm_output
@@ -54,6 +55,7 @@ class Pipeline:
     max_rows: int
     timeout_seconds: float
     cache: AnswerCache | None = None
+    budget: DailyBudget | None = None
 
     @property
     def schema(self) -> SchemaInfo:
@@ -73,6 +75,8 @@ class Pipeline:
         messages = build_messages(get_schema_block(self.db_path), question)
         failure: AppError | None = None
         for attempt in range(MAX_ATTEMPTS):
+            if self.budget:
+                self.budget.consume()
             started = time.perf_counter()
             raw = self.llm.complete(messages)
             log.info("llm call took %.0f ms (attempt %d)", _ms_since(started), attempt + 1)

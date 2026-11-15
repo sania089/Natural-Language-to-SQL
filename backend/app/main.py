@@ -10,6 +10,7 @@ from app.error_handlers import register_error_handlers
 from app.logging_config import configure_logging
 from app.security import add_security_headers
 from app.services.answer_cache import AnswerCache
+from app.services.daily_budget import DailyBudget
 from app.services.rate_limiter import SlidingWindowLimiter
 
 
@@ -17,9 +18,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
 
-    app = FastAPI(title="Natural Language to SQL", version="0.1.0")
+    # API docs are for development only; production exposes no description of the API.
+    docs_url = None if settings.is_production else "/docs"
+    redoc_url = None if settings.is_production else "/redoc"
+    openapi_url = None if settings.is_production else "/openapi.json"
+    app = FastAPI(
+        title="Natural Language to SQL",
+        version="1.0.0",
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
+    )
     app.state.settings = settings
     app.state.answer_cache = AnswerCache(settings.answer_cache_size)
+    app.state.daily_budget = DailyBudget(settings.daily_llm_call_limit)
     app.state.rate_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute)
     register_error_handlers(app)
     add_security_headers(app)
